@@ -9,6 +9,10 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -21,56 +25,41 @@ public class Main {
     private static double lat = 41.75;
     private static double lon = -71.45;
     private static double size = 0.125;
+    private static boolean autocorrect = false;
 
     private static final String OSM_BASE_URL = "http://overpass-api.de/api/map?bbox=";
 
     public static void main(String[] args) {
+        System.out.println("Welcome to NoodleMaps!");
+//        System.out.println("Args: " + String.join(" ", Arrays.asList(args)));
+
         OptionParser parser = new OptionParser();
 
-        parser.accepts("l").withRequiredArg().ofType(Double.class).withValuesSeparatedBy(' ');
+        parser.accepts("l").withRequiredArg().ofType(Double.class).withValuesSeparatedBy(',');
         parser.accepts("s").withRequiredArg().ofType(Double.class);
         parser.accepts("a");
         parser.accepts("gui");
 
-        OptionSet options = parser.parse(args);
-        
-        if (options.has("l")) {
-            List<> coords = options.valuesOf("l");
-        }
-        if (options.has("s")) {
-            double newSize = options.valueOf("s");
-        }
-
-
-
-        if (options.has("a")) {
-
-        }
-        if (options.has("gui")) {
-
-        }
-    }
-
-    public static void main2(String[] args) {
-        /* parse command line arguments */
-        /* downloads OSM data */
-        /* parses into SQL data */
-        /* create KD-tree from data, if present */
-        /* create auto-correct resources */
-        /* create graph */
-        /* run server */
-
-        /* args: starting region */
-        if (args.length != 3 && args.length != 4)
-            usageError();
-
+        OptionSet options = null;
         try {
-            lat = Double.parseDouble(args[0]);
-            lon = Double.parseDouble(args[1]);
-            if (args.length == 4)
-                size = Double.parseDouble(args[2]);
-        } catch (NumberFormatException e) {
+            options = parser.parse(args);
+        } catch (Exception e) {
             usageError();
+        }
+
+        /* make these round to, say, 3 decimal places? */
+        if (options.has("l")) {
+            List<Double> coords = (List<Double>) options.valuesOf("l");
+            if (coords.size() == 2) {
+                lat = coords.get(0);
+                lon = coords.get(1);
+            } else {
+                usageError();
+            }
+        }
+
+        if (options.has("s")) {
+            size = (Double) options.valueOf("s");
         }
 
         if (!validLatLon(lat, lon))
@@ -79,35 +68,28 @@ public class Main {
         if (!validSize(size))
             usageError();
 
-        /* set up database, etc */
-        /* attempt to get the result of http://api.openstreetmap.org/api/0.6/map?bbox=lat,lon,lat+1,lon+1 */
+        /* so we have a reasonable square of land to look at */
         downloadData();
 
-        int retval = 0;
 
-        switch (args[args.length - 1])  {
-            case "gui":
-                /* start server */
-                MapsServer server = new MapsServer();
-                retval = server.run();
-                break;
-            case "nogui":
-                /* start CLI */
-                Repl repl = new Repl();
-                retval = repl.run();
-                break;
-            default:
-                usageError();
-                break;
+        if (options.has("a")) {
+            autocorrect = true;
         }
 
-        System.exit(retval);
+        Runnable runnable = null;
+        if (options.has("gui")) {
+            runnable = new MapsServer(lat, lon, size, autocorrect);
+        } else {
+            runnable = new MapsRepl(lat, lon, size, autocorrect);
+        }
+
+        runnable.run();
     }
 
     private static void usageError() {
-        System.out.println("Usage: \"./NoodleMaps lat lon size] {gui, nogui}\"");
+        System.out.println("Usage: \"./NoodleMaps [-l lat lon] [-s size] [-a] [gui]\"");
         System.out.println("\t - \'lat\' and \'lon\' must represent a valid pair of coordinates");
-        System.out.println("\t - the optional size must be a decimal number in [0.01, 0.5)");
+        System.out.println("\t - size must be a decimal number in [0.001, 0.5)");
 
         System.exit(1);
     }
@@ -117,7 +99,7 @@ public class Main {
     }
 
     private static boolean validSize(double size) {
-        return (size >= 0.01 && size < 0.5);
+        return (size >= 0.001 && size < 0.5);
     }
 
     public static void printError(String s) {
@@ -171,7 +153,7 @@ public class Main {
         }
 
         verifyData(mapFile);
-        System.out.println("The necessary map data has been downloaded.");
+        System.out.println("The necessary map data is on disk.");
     }
 
     private static void verifyData(File mapFile) {
