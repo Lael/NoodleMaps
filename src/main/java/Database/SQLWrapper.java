@@ -18,7 +18,7 @@ public class SQLWrapper {
     private static String dbUrlBase = "jdbc:sqlite:";
 
     /* returns a connection to a database created in the file pointed to by path with name */
-    public Connection createNewDB(String path, String name) {
+    public static Connection createNewDB(String path, String name) {
         Connection conn = null;
         try {
             Class.forName(jdbcDriver);
@@ -46,15 +46,15 @@ public class SQLWrapper {
         return conn;
     }
 
-    public boolean createTable(Connection conn, String table) {
+    public static boolean createTable(Connection conn, String table) {
         return tryStatement(conn, "CREATE TABLE" + table);
     }
 
-    public boolean insertItem(Connection conn, String table, Object values) {
+    public static boolean insertItem(Connection conn, String table, Object values) {
         return tryStatement(conn, "INSERT INTO " + table + " VALUES " + values.toString());
     }
 
-    private boolean tryStatement(Connection conn, String sql) {
+    private static boolean tryStatement(Connection conn, String sql) {
         try {
             Statement statement = conn.createStatement();
             statement.executeUpdate(sql);

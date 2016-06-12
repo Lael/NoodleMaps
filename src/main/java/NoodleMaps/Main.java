@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import Maps.BoundingBox;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
@@ -31,7 +32,6 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("Welcome to NoodleMaps!");
-//        System.out.println("Args: " + String.join(" ", Arrays.asList(args)));
 
         OptionParser parser = new OptionParser();
 
@@ -62,21 +62,25 @@ public class Main {
             size = (Double) options.valueOf("s");
         }
 
-        if (!validLatLon(lat, lon))
-            usageError();
+        BoundingBox box = null;
+        try {
+            box = new BoundingBox(lat, lon, size);
+        } catch (IllegalArgumentException e) {
+            fatalError(e.getLocalizedMessage());
+        }
 
-        if (!validSize(size))
-            usageError();
 
         /* so we have a reasonable square of land to look at */
         downloadData();
 
+        DBMaker dbm = new DBMaker("map_db.sqlite3");
+        System.out.println(dbm.makeDB(box));
 
         if (options.has("a")) {
             autocorrect = true;
         }
 
-        Runnable runnable = null;
+        Runnable runnable;
         if (options.has("gui")) {
             runnable = new MapsServer(lat, lon, size, autocorrect);
         } else {
@@ -92,10 +96,6 @@ public class Main {
         System.out.println("\t - size must be a decimal number in [0.001, 0.5)");
 
         System.exit(1);
-    }
-
-    private static boolean validLatLon(double lat, double lon) {
-        return (lat > -180 && lat <= 180 - size && lon > -90 || lon <= 90 - size);
     }
 
     private static boolean validSize(double size) {
