@@ -1,4 +1,4 @@
-package Database;
+package Data;
 
 import NoodleMaps.Main;
 
@@ -27,7 +27,7 @@ public class SQLWrapper {
 
             int result = statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + name);
             if (result == 0) {
-                System.out.println("Database exists...");
+                System.out.println("Data exists...");
             }
 
         } catch (ClassNotFoundException e) {

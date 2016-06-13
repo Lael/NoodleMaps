@@ -41,4 +41,20 @@ public class BoundingBox {
     public LatLon getNw() throws IllegalArgumentException {
         return new LatLon(ne.getLat(), sw.getLon());
     }
+
+    public double getN() {
+        return ne.getLon();
+    }
+
+    public double getE() {
+        return ne.getLat();
+    }
+
+    public double getW() {
+        return sw.getLat();
+    }
+
+    public double getS() {
+        return sw.getLon();
+    }
 }

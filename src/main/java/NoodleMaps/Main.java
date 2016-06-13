@@ -16,6 +16,7 @@ import java.util.List;
 import Maps.BoundingBox;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Main class of the NoodleMaps project. Parses command line arguments and downloads necessary data
@@ -39,12 +40,17 @@ public class Main {
         parser.accepts("s").withRequiredArg().ofType(Double.class);
         parser.accepts("a");
         parser.accepts("gui");
+        parser.accepts("clean");
 
         OptionSet options = null;
         try {
             options = parser.parse(args);
         } catch (Exception e) {
             usageError();
+        }
+
+        if (options.has("clean")) {
+            cleanUpDir();
         }
 
         /* make these round to, say, 3 decimal places? */
@@ -71,7 +77,7 @@ public class Main {
 
 
         /* so we have a reasonable square of land to look at */
-        downloadData();
+        downloadData(box);
 
         DBMaker dbm = new DBMaker("map_db.sqlite3");
         System.out.println(dbm.makeDB(box));
@@ -90,8 +96,16 @@ public class Main {
         runnable.run();
     }
 
+    private static void cleanUpDir() {
+        try {
+            FileUtils.deleteDirectory(new File("map_data"));
+        } catch (IOException e) {
+            /* shouldn't be an issue */
+        }
+    }
+
     private static void usageError() {
-        System.out.println("Usage: \"./NoodleMaps [-l lat lon] [-s size] [-a] [gui]\"");
+        System.out.println("Usage: \"./NoodleMaps [-l lat lon] [-s size] [-a] [--gui] [--clean]\"");
         System.out.println("\t - \'lat\' and \'lon\' must represent a valid pair of coordinates");
         System.out.println("\t - size must be a decimal number in [0.001, 0.5)");
 
@@ -106,19 +120,17 @@ public class Main {
         System.out.println("Error: " + s);
     }
 
-    private static void fatalError(String s) {
+    public static void fatalError(String s) {
         printError(s);
         System.exit(1);
     }
 
-    private static void downloadData() {
-        DecimalFormat df = new DecimalFormat("#.000");
-        String latLonString =
-                df.format(lon) + "," + df.format(lat) + "," + df.format(lon + size) + "," + df.format(lat + size);
+    private static void downloadData(BoundingBox box) {
+        String latLonString = boxToString(box);
+        System.out.println(latLonString);
 
         File mapsDir = new File("map_data");
         File mapFile = new File("map_data/map_data" + latLonString + ".xml");
-
         if (!mapsDir.exists()) {
             System.out.println("Creating ~/.NoodleMaps...");
             if (!mapsDir.mkdir())
@@ -145,19 +157,22 @@ public class Main {
             stream.close();
             rbc.close();
         } catch (FileNotFoundException e) {
-            fatalError("Failed to create an output stream to map_data.xml" + e.getLocalizedMessage());
+            fatalError("Failed to create an output stream to map data file" + e.getLocalizedMessage());
         } catch (MalformedURLException e) {
             fatalError("Failed to create URL: " + e.getLocalizedMessage());
         } catch (IOException e) {
             fatalError("Failed to connect to OSM: " + e.getLocalizedMessage());
         }
 
-        verifyData(mapFile);
         System.out.println("The necessary map data is on disk.");
     }
 
-    private static void verifyData(File mapFile) {
-        /* read the first few lines and make sure there's one that says the bounds are correct */
-        return;
+    public static String boxToString(BoundingBox box) {
+        DecimalFormat df = new DecimalFormat("#.000");
+        return df.format(box.getS()) + "," +
+                        df.format(box.getW()) + "," +
+                        df.format(box.getN()) + "," +
+                        df.format(box.getE());
+
     }
 }
