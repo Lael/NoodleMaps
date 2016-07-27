@@ -1,44 +1,113 @@
-package NoodleMaps;
+package noodleMaps;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.text.DecimalFormat;
-import java.util.List;
-
-import Maps.BoundingBox;
+import db.Node;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.io.FileUtils;
 
-/**
- * Main class of the NoodleMaps project. Parses command line arguments and downloads necessary data
- * Created by Lael Costa on 6/10/16.
- */
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 public class Main {
 
-    private static double lat = 41.75;
-    private static double lon = -71.45;
-    private static double size = 0.125;
-    private static boolean autocorrect = false;
+    public static String MAPS_DIR_NAME = "maps_data";
+    public static String REGIONS_FILE_NAME = "regions.txt";
+    public static String DATABASE_FILE_NAME = "noodle_maps.db";
+    public static String TILES_DIR_NAME = "tiles";
+    public static String XML_DIR_NAME = "data";
 
-    private static final String OSM_BASE_URL = "http://overpass-api.de/api/map?bbox=";
+    private final String jdbcDriver = "org.sqlite.JDBC";
+    private final String dbUrlBase = "jdbc:sqlite:";
+
+    private double startLat = 41.75;
+    private double startLon = -71.45;
+
 
     public static void main(String[] args) {
-        System.out.println("Welcome to NoodleMaps!");
+        Main main = new Main();
+        main.run(args);
+    }
 
+    private void run(String[] args) {
+        OptionSet options = checkArgs(args);
+
+        /* -h, -C, */
+        if (options.has("h")) {
+            helpMessage();
+        }
+
+        if (options.has("C")) {
+            cleanDirectory();
+            System.out.println("Bye!");
+            System.exit(0);
+        }
+
+        if (options.has("c")) {
+            cleanDirectory();
+        }
+
+        if (options.has("t")) {
+            startLat = (Double) options.valueOf("t");
+            if (options.has("n")) {
+                startLon = (Double) options.valueOf("n");
+            } else {
+                fatalError("The options -t and -n must be used together or not at all.");
+            }
+        } else {
+            fatalError("The options -t and -n must be used together or not at all.");
+        }
+
+        System.out.println("Welcome to NoodleMaps!");
+        System.out.println("Verifying directory...");
+        verifyDirectory();
+
+        System.out.println("Starting up...");
+        if (options.has("g")) {
+            NoodleServer server = new NoodleServer(startLat, startLon, options.has("a"));
+        } else {
+            NoodleRepl repl = new NoodleRepl(startLat, startLon);
+        }
+    }
+
+
+    private void usageError() {
+        System.out.println("Usage: ./noodleMaps [-acCgh] [-t <lat> -n <lon>] [-s <size>]");
+        System.exit(1);
+    }
+
+    private void helpMessage() {
+        System.out.println("-h                display this information and exit");
+        System.out.println("-c                clean up directories before running");
+        System.out.println("-C                clean and exit");
+        System.out.println("-a                employ autocorrect if the gui flag is set");
+        System.out.println("-g                start the gui on a local server");
+        System.out.println("-t <latitude>     specify starting center point latitude; must be used with -n");
+        System.out.println("-n <longitude>    specify starting center point longitude; must be used with -t");
+
+        System.exit(0);
+    }
+
+    public void fatalError(String error) {
+        System.out.println("Error: " + error);
+        System.exit(1);
+    }
+
+
+
+    private OptionSet checkArgs(String[] args) {
         OptionParser parser = new OptionParser();
 
-        parser.accepts("l").withRequiredArg().ofType(Double.class).withValuesSeparatedBy(',');
-        parser.accepts("s").withRequiredArg().ofType(Double.class);
         parser.accepts("a");
-        parser.accepts("gui");
-        parser.accepts("clean");
+        parser.accepts("c");
+        parser.accepts("C");
+        parser.accepts("g");
+        parser.accepts("h");
+        parser.accepts("n").withRequiredArg().ofType(Double.class);
+        parser.accepts("s").withRequiredArg().ofType(Double.class);
 
         OptionSet options = null;
         try {
@@ -46,131 +115,125 @@ public class Main {
         } catch (Exception e) {
             usageError();
         }
+        return options;
+    }
 
-        if (options.has("clean")) {
-            cleanUpDir();
+    private File checkForDirectory(File parent, String directory) {
+        File dir;
+        if (parent == null) {
+            dir = new File(directory);
+        } else {
+            dir = new File(parent, directory);
         }
 
-        /* make these round to, say, 3 decimal places? */
-        if (options.has("l")) {
-            List<Double> coords = (List<Double>) options.valuesOf("l");
-            if (coords.size() == 2) {
-                lat = coords.get(0);
-                lon = coords.get(1);
-            } else {
-                usageError();
+        if (dir.isDirectory()) {
+            return dir;
+        } else if (dir.isFile()) {
+            fatalError("A file called \'" + directory + "\' already exists. Remove it and try again!");
+        } else {
+            if (!dir.mkdir()) {
+                fatalError("Could not create directory \'" + directory + "\'!");
             }
         }
 
-        if (options.has("s")) {
-            size = (Double) options.valueOf("s");
-        }
+        return dir;
+    }
 
-        BoundingBox box = null;
-        try {
-            box = new BoundingBox(lat, lon, size);
-        } catch (IllegalArgumentException e) {
-            fatalError(e.getLocalizedMessage());
-        }
-
-
-        /* so we have a reasonable square of land to look at */
-        downloadData(box);
-
-        DBMaker dbm = new DBMaker("map_db.sqlite3");
-        System.out.println(dbm.makeDB(box));
-
-        if (options.has("a")) {
-            autocorrect = true;
-        }
-
-        Runnable runnable;
-        if (options.has("gui")) {
-            runnable = new MapsServer(lat, lon, size, autocorrect);
+    private File checkForFile(File parent, String file) {
+        File f;
+        if (parent == null) {
+            f = new File(file);
         } else {
-            runnable = new MapsRepl(lat, lon, size, autocorrect);
+            f = new File(parent, file);
         }
 
-        runnable.run();
+        if (f.isFile()) {
+            return f;
+        } else if (f.isDirectory()) {
+            fatalError("A directory called \'" + file + "\' already exists. Remove it and try again!");
+        } else {
+            try {
+                if (!f.createNewFile()) {
+                    fatalError("Could not create file \'" + file + "\'!");
+                }
+            } catch (IOException e) {
+                fatalError("Could not create file \'" + file + "\' - " + e.getLocalizedMessage());
+            }
+        }
+
+        return f;
     }
 
-    private static void cleanUpDir() {
+    private void createTable(Statement statement, String name, String... values) throws SQLException {
+        StringBuilder sql = new StringBuilder("create table if not exists ");
+        sql.append(name);
+        sql.append(" (");
+
+        for (String string : values) {
+            sql.append(string);
+            sql.append(", ");
+        }
+
+        sql.delete(sql.length() - 2, sql.length()); // get rid of that last comma
+        sql.append(");");
+
+        statement.executeUpdate(sql.toString());
+    }
+
+    private void verifyDatabase(File database) {
+        // if it doesn't exist, create a database in the file
+        String path = database.getAbsolutePath();
+        Connection conn = null;
         try {
-            FileUtils.deleteDirectory(new File("map_data"));
-        } catch (IOException e) {
-            /* shouldn't be an issue */
+            Class.forName(jdbcDriver);
+            conn = DriverManager.getConnection(dbUrlBase + path);
+            Statement statement = conn.createStatement();
+
+            // TODO: add defaults
+
+            createTable(statement, "node", "id bigint primary key not null", "latitude double not null", "longitude double not null");
+            createTable(statement, "way", "id bigint primary key not null", "num_nodes int not null",
+                                   "highway_type text not null", "one_way bool default false", "length double default -1");
+            createTable(statement, "intersection", "node_id bigint not null", "way_id bigint not null", "position int not null",
+                                   "foreign key(node_id) references node(id)",
+                                   "foreign key(way_id) references way(id)");
+            System.out.println("Data exists...");
+        } catch (ClassNotFoundException e) {
+            fatalError("Could not find driver class: " + e.getLocalizedMessage());
+        } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+                fatalError("Failed to create or connect to SQL database: " + e.getLocalizedMessage());
+            } catch (SQLException e1) {
+                fatalError("Failed to close SQL database connection: " + e.getLocalizedMessage());
+            }
         }
     }
 
-    private static void usageError() {
-        System.out.println("Usage: \"./NoodleMaps [-l lat lon] [-s size] [-a] [--gui] [--clean]\"");
-        System.out.println("\t - \'lat\' and \'lon\' must represent a valid pair of coordinates");
-        System.out.println("\t - size must be a decimal number in [0.001, 0.5)");
+    private void verifyDirectory() {
+        // check that directory exists
+        File directory = checkForDirectory(null, MAPS_DIR_NAME);
 
-        System.exit(1);
+        // check that directory contains files regions.txt and noodle_maps.db, and directory tiles
+        checkForFile(directory, REGIONS_FILE_NAME);
+        File database = checkForFile(directory, DATABASE_FILE_NAME);
+
+        verifyDatabase(database);
+
+        checkForDirectory(directory, TILES_DIR_NAME);
+        checkForDirectory(directory, XML_DIR_NAME);
+
+        // TODO: verify tiles and xml directories
     }
 
-    private static boolean validSize(double size) {
-        return (size >= 0.001 && size < 0.5);
-    }
-
-    public static void printError(String s) {
-        System.out.println("Error: " + s);
-    }
-
-    public static void fatalError(String s) {
-        printError(s);
-        System.exit(1);
-    }
-
-    private static void downloadData(BoundingBox box) {
-        String latLonString = boxToString(box);
-        System.out.println(latLonString);
-
-        File mapsDir = new File("map_data");
-        File mapFile = new File("map_data/map_data" + latLonString + ".xml");
-        if (!mapsDir.exists()) {
-            System.out.println("Creating ~/.NoodleMaps...");
-            if (!mapsDir.mkdir())
-                fatalError("Could not find or create map_data directory.");
-        }
-
-        boolean fileExists = false;
-
+    private void cleanDirectory() {
+        System.out.println("Cleaning out local data.");
         try {
-            fileExists = !mapFile.createNewFile();
+            FileUtils.deleteDirectory(new File(MAPS_DIR_NAME));
         } catch (IOException e) {
-            fatalError("Failed to create map_data.xml" + e.getLocalizedMessage());
+            System.out.println("Failed to remove directory: " + e.getLocalizedMessage());
         }
-
-        if (!fileExists) try {
-            System.out.println("Attempting to download map data for bounding box "
-                    + lat + ", " + lon + ", " + (lat + size) + ", " + (lon + size) + "...");
-            URL url = new URL(OSM_BASE_URL + latLonString);
-            ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-            FileOutputStream stream = new FileOutputStream(mapFile);
-
-            long bytesRead = stream.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            System.out.println("Read " + bytesRead + " bytes from OSM...");
-            stream.close();
-            rbc.close();
-        } catch (FileNotFoundException e) {
-            fatalError("Failed to create an output stream to map data file" + e.getLocalizedMessage());
-        } catch (MalformedURLException e) {
-            fatalError("Failed to create URL: " + e.getLocalizedMessage());
-        } catch (IOException e) {
-            fatalError("Failed to connect to OSM: " + e.getLocalizedMessage());
-        }
-
-        System.out.println("The necessary map data is on disk.");
-    }
-
-    public static String boxToString(BoundingBox box) {
-        DecimalFormat df = new DecimalFormat("#.000");
-        return df.format(box.getS()) + "," +
-                        df.format(box.getW()) + "," +
-                        df.format(box.getN()) + "," +
-                        df.format(box.getE());
-
     }
 }

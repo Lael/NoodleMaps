@@ -1,32 +1,29 @@
-package NoodleMaps;
+package db;
 
 import Data.XMLTag;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
-/**
- * Represents OSM's Ways, with a subset of their tags.
- * Created by laelcosta on 6/12/16.
- */
-class Way {
+@Entity
+@Table(name = "way")
+public class Way {
 
-    private String id;
-    private List<String> nodeIds;
+    private long id;
     private int numNodes;
     private String highwayType = "";
     private String name = "";
     private boolean oneWay = false;
-    private int length = -1;
+    private double length = -1;
 
     Way(XMLTag tag) {
-        id = tag.getDatum("id");
+        id = Long.parseLong(tag.getDatum("id"));
         int i = 0;
-        nodeIds = new ArrayList<String>();
+//        nodeIds = new ArrayList<String>();
         XMLTag child = null;
         while ((child = tag.getChild(i)) != null) {
             if (child.getType().equals("nd")) {
-                nodeIds.add(child.getDatum("id"));
+//                nodeIds.add(child.getDatum("id"));
                 numNodes ++;
             } else if (child.getType().equals("tag")) {
                 String k = child.getDatum("k");
@@ -47,12 +44,12 @@ class Way {
         return numNodes;
     }
 
-    public String getNodeWayEntry(int index) {
-        if (index < 0 || index >= numNodes)
-            return null;
-
-        return "(\"" + id + "\",\"" + nodeIds.get(index) + "\"," + index + ")";
-    }
+//    public String getNodeWayEntry(int index) {
+//        if (index < 0 || index >= numNodes)
+//            return null;
+//
+//        return "(\"" + id + "\",\"" + nodeIds.get(index) + "\"," + index + ")";
+//    }
 
     public String toString() {
         return "(\"" + id + "\"," + numNodes + ",\"" + highwayType + "\",\"" + name + "\",\"" + oneWay + "\")";
