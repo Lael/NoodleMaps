@@ -1,5 +1,6 @@
 package noodleMaps;
 
+import data.FileEater;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.io.FileUtils;
@@ -15,7 +16,7 @@ public class Main {
 
     public static String MAPS_DIR_NAME = "maps_data";
     public static String REGIONS_FILE_NAME = "regions.txt";
-    public static String DATABASE_FILE_NAME = "noodle_maps.db";
+    public static String DATABASE_FILE_NAME = "noodle_maps.data";
     public static String TILES_DIR_NAME = "tiles";
     public static String XML_DIR_NAME = "data";
 
@@ -70,6 +71,8 @@ public class Main {
         } else {
             NoodleRepl repl = new NoodleRepl(startLat, startLon);
         }
+
+        FileEater.consumeXml(new File("/Users/laelcosta/Desktop/NoodleMaps/map_data/map_data-71.450,41.750,-71.449,41.751.xml"));
     }
 
 
@@ -215,7 +218,7 @@ public class Main {
         // check that directory exists
         File directory = checkForDirectory(null, MAPS_DIR_NAME);
 
-        // check that directory contains files regions.txt and noodle_maps.db, and directory tiles
+        // check that directory contains files regions.txt and noodle_maps.data, and directory tiles
         checkForFile(directory, REGIONS_FILE_NAME);
         File database = checkForFile(directory, DATABASE_FILE_NAME);
 

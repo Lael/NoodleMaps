@@ -1,7 +1,4 @@
-package db;
-
-import javax.persistence.Entity;
-import javax.persistence.Table;
+package data;
 
 public class Intersection {
     private long wayId;
