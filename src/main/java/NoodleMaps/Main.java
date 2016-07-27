@@ -1,6 +1,5 @@
 package noodleMaps;
 
-import db.Node;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.io.FileUtils;
