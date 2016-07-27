@@ -19,6 +19,7 @@
 .idea/mongoSettings.xml
 ## File-based project format:
 *.iws
+*.iml
 ## Plugin-specific files:
 # IntelliJ
 /out/
