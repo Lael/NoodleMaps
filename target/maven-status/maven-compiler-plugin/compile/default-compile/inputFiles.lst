@@ -1,4 +1,10 @@
-/Users/laelcosta/Desktop/NoodleMaps/src/main/java/Database/SQLWrapper.java
-/Users/laelcosta/Desktop/NoodleMaps/src/main/java/NoodleMaps/MapsServer.java
-/Users/laelcosta/Desktop/NoodleMaps/src/main/java/NoodleMaps/Main.java
-/Users/laelcosta/Desktop/NoodleMaps/src/main/java/NoodleMaps/MapsRepl.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/db/Node.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/db/Way.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/location/KDTree.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/maps/LatLon.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/noodleMaps/Main.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/Data/SQLWrapper.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/Data/XMLReader.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/db/Intersection.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/maps/BoundingBox.java
+/Users/laelcosta/Desktop/NoodleMaps/src/main/java/Data/XMLTag.java
