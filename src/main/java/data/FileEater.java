@@ -30,7 +30,7 @@ public class FileEater {
     /**
      * Isn't very careful about XML format!
      *
-     * @param stream    the file
+     * @param stream the file
      * @throws XMLStreamException
      * @throws IOException
      */
@@ -56,11 +56,6 @@ public class FileEater {
         stream.close();
     }
 
-    /**
-     * Isn't very careful about XML format!
-     *
-     * @param reader    the reader
-     */
     private void getNode(XMLStreamReader reader) throws SQLException {
         Node node = new Node();
         int numAtts = reader.getAttributeCount();
@@ -78,12 +73,6 @@ public class FileEater {
         insertObject(node.getInsertMessage());
     }
 
-    /**
-     * Isn't very careful about XML format!
-     *
-     * @param reader    the reader
-     * @throws XMLStreamException
-     */
     private void getWay(XMLStreamReader reader) throws XMLStreamException, XMLParseException, SQLException {
         Way way = new Way();
         int numAtts = reader.getAttributeCount();
@@ -100,14 +89,6 @@ public class FileEater {
         insertObject(way.getInsertMessage());
     }
 
-    /**
-     * Isn't very careful about XML format!
-     *
-     * @param way       the way
-     * @param reader    the reader
-     * @return          the way, now with more info
-     * @throws XMLStreamException
-     */
     private Way getIntersections(Way way, XMLStreamReader reader) throws XMLStreamException, XMLParseException, SQLException {
         int index = 0;
         long firstId = -1;
