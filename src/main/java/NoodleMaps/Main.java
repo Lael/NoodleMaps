@@ -6,11 +6,13 @@ import joptsimple.OptionSet;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 
 public class Main {
 
@@ -58,12 +60,14 @@ public class Main {
                 fatalError("The options -t and -n must be used together or not at all.");
             }
         } else {
-            fatalError("The options -t and -n must be used together or not at all.");
+            if (options.has("n")) {
+                fatalError("The options -t and -n must be used together or not at all.");
+            }
         }
 
         System.out.println("Welcome to NoodleMaps!");
         System.out.println("Verifying directory...");
-        verifyDirectory();
+        Connection connection = verifyDirectoryAndDatabase();
 
         System.out.println("Starting up...");
         if (options.has("g")) {
@@ -72,7 +76,25 @@ public class Main {
             NoodleRepl repl = new NoodleRepl(startLat, startLon);
         }
 
-        FileEater.consumeXml(new File("/Users/laelcosta/Desktop/NoodleMaps/map_data/map_data-71.450,41.750,-71.449,41.751.xml"));
+        Date start = new Date();
+        System.out.println(start.toString());
+
+        try {
+            FileEater fileEater = new FileEater(connection);
+            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.325,41.875.xml"));
+        } catch (Exception e) {
+            e.printStackTrace();
+//            fatalError(e.getLocalizedMessage());
+        }
+        Date end = new Date();
+        System.out.println(end.toString());
+
+
+        try {
+            connection.close();
+        } catch (Exception e) {
+            fatalError(e.getLocalizedMessage());
+        }
     }
 
 
@@ -182,7 +204,14 @@ public class Main {
         statement.executeUpdate(sql.toString());
     }
 
-    private void verifyDatabase(File database) {
+    private void createIndex(Statement statement, String indexName, String tableName, String column) {
+        String sql = "create index if not exists " +
+                indexName + " on " +
+                tableName + "(" + column + ");";
+
+    }
+
+    private Connection verifyDatabase(File database) {
         // if it doesn't exist, create a database in the file
         String path = database.getAbsolutePath();
         Connection conn = null;
@@ -193,28 +222,61 @@ public class Main {
 
             // TODO: add defaults
 
-            createTable(statement, "node", "id bigint primary key not null", "latitude double not null", "longitude double not null");
-            createTable(statement, "way", "id bigint primary key not null", "num_nodes int not null",
-                                   "highway_type text not null", "one_way bool default false", "length double default -1");
-            createTable(statement, "intersection", "node_id bigint not null", "way_id bigint not null", "position int not null",
-                                   "foreign key(node_id) references node(id)",
-                                   "foreign key(way_id) references way(id)");
-            System.out.println("Data exists...");
+            createTable(statement, "node",
+                    "id bigint primary key not null",
+                    "latitude double not null",
+                    "longitude double not null");
+            createTable(statement, "way",
+                    "id bigint primary key not null",
+                    "num_nodes int not null",
+                    "highway_type text",
+                    "street_name text",
+                    "land_use text",
+                    "building text",
+                    "closed int default 0",
+                    "one_way bool default false",
+                    "length double default -1");
+            createTable(statement,
+                    "intersection",
+                    "node_id bigint not null",
+                    "way_id bigint not null",
+                    "position int not null",
+                    "foreign key(node_id) references node(id)",
+                    "foreign key(way_id) references way(id)");
+            createIndex(statement,
+                    "Nind1",
+                    "node",
+                    "id");
+            createIndex(statement,
+                    "Nind2",
+                    "node",
+                    "latitude");
+            createIndex(statement,
+                    "Nind3",
+                    "node",
+                    "longitude");
+            createIndex(statement,
+                    "Wind1",
+                    "way",
+                    "id");
+            createIndex(statement,
+                    "Iind1",
+                    "intersection",
+                    "node_id");
+            createIndex(statement,
+                    "Iind2",
+                    "intersection",
+                    "way_id");
+            System.out.println("Tables exist...");
         } catch (ClassNotFoundException e) {
             fatalError("Could not find driver class: " + e.getLocalizedMessage());
         } catch (SQLException e) {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-                fatalError("Failed to create or connect to SQL database: " + e.getLocalizedMessage());
-            } catch (SQLException e1) {
-                fatalError("Failed to close SQL database connection: " + e.getLocalizedMessage());
-            }
+            fatalError("Failed to create or connect to SQL database: " + e.getLocalizedMessage());
         }
+        return conn;
     }
 
-    private void verifyDirectory() {
+    private Connection verifyDirectoryAndDatabase() {
         // check that directory exists
         File directory = checkForDirectory(null, MAPS_DIR_NAME);
 
@@ -222,12 +284,10 @@ public class Main {
         checkForFile(directory, REGIONS_FILE_NAME);
         File database = checkForFile(directory, DATABASE_FILE_NAME);
 
-        verifyDatabase(database);
-
         checkForDirectory(directory, TILES_DIR_NAME);
         checkForDirectory(directory, XML_DIR_NAME);
 
-        // TODO: verify tiles and xml directories
+        return verifyDatabase(database);
     }
 
     private void cleanDirectory() {

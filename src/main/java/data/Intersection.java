@@ -22,4 +22,23 @@ public class Intersection {
     public int getIndex() {
         return index;
     }
+
+    public String getInsertMessage() {
+        String sql = "insert into intersection " +
+                "(node_id, way_id, position) " +
+                "values " +
+                "(" + nodeId + ", " +
+                wayId + ", " +
+                index + ");";
+        return sql;
+    }
+
+    @Override
+    public String toString() {
+        return "Intersection{" +
+                "wayId=" + wayId +
+                ", nodeId=" + nodeId +
+                ", index=" + index +
+                '}';
+    }
 }

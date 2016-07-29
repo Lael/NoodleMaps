@@ -5,9 +5,7 @@ import location.LatLon;
 public class Node {
 
     private long id;
-
     private Double latitude;
-
     private Double longitude;
 
     public Node() {
@@ -43,11 +41,22 @@ public class Node {
         this.longitude = longitude;
     }
 
-    public LatLon getLatLon() {
-        return new LatLon(latitude, longitude);
+    public String getInsertMessage() {
+        String sql = "insert into node " +
+                "(id, latitude, longitude) " +
+                "values " +
+                "(" + id + ", " +
+                latitude + ", " +
+                longitude + ");";
+        return sql;
     }
 
+    @Override
     public String toString() {
-        return "(\"" + id + "\"," + latitude + "," + longitude + ")";
+        return "Node{" +
+                "id=" + id +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                '}';
     }
 }
