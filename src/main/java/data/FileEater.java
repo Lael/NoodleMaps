@@ -70,9 +70,9 @@ public class FileEater {
             if (attName.equals("id")) {
                 node.setId(Long.parseLong(attValue));
             } else if (attName.equals("lat")) {
-                node.setLatitude(Double.parseDouble(attValue));
+                node.setLat(Double.parseDouble(attValue));
             } else if (attName.equals("lon")) {
-                node.setLongitude(Double.parseDouble(attValue));
+                node.setLon(Double.parseDouble(attValue));
             }
         }
         insertObject(node.getInsertMessage());

@@ -5,16 +5,19 @@ import location.LatLon;
 public class Node {
 
     private long id;
-    private Double latitude;
-    private Double longitude;
+    private LatLon latLon;
 
     public Node() {
     }
 
     public Node(long id, Double latitude, Double longitude) {
         this.id = id;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.latLon = new LatLon(latitude, longitude);
+    }
+
+    public Node(Node oldNode) {
+        this.id = oldNode.getId();
+        this.latLon = new LatLon(oldNode.getLatLon());
     }
 
     public long getId() {
@@ -25,20 +28,20 @@ public class Node {
         this.id = id;
     }
 
-    public Double getLatitude() {
-        return latitude;
+    public LatLon getLatLon() {
+        return latLon;
     }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
+    public void setLatLon(LatLon latLon) {
+        this.latLon = latLon;
     }
 
-    public Double getLongitude() {
-        return longitude;
+    public void setLat(double lat) {
+        this.latLon.setLat(lat);
     }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+    public void setLon(double lon) {
+        this.latLon.setLon(lon);
     }
 
     public String getInsertMessage() {
@@ -46,8 +49,8 @@ public class Node {
                 "(id, latitude, longitude) " +
                 "values " +
                 "(" + id + ", " +
-                latitude + ", " +
-                longitude + ");";
+                latLon.getLat() + ", " +
+                latLon.getLon() + ");";
         return sql;
     }
 
@@ -55,8 +58,8 @@ public class Node {
     public String toString() {
         return "Node{" +
                 "id=" + id +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
+                ", latitude=" + latLon.getLat() +
+                ", longitude=" + latLon.getLon() +
                 '}';
     }
 }

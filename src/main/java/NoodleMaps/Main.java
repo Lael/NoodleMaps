@@ -81,7 +81,7 @@ public class Main {
 
         try {
             FileEater fileEater = new FileEater(connection);
-            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.325,41.875.xml"));
+            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.440,41.760.xml"));
         } catch (Exception e) {
             e.printStackTrace();
 //            fatalError(e.getLocalizedMessage());

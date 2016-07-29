@@ -1,27 +1,54 @@
 package location;
 
-public class LatLon extends Cartesian {
-    public final int EARTH_RADIUS_KM = 6371; // Radius of the earth
+public class LatLon {
+    public final int EARTH_RADIUS_KM = 6371; // Radius of the earth in km
+    private double lat;
+    private double lon;
 
     public LatLon(double lat, double lon) throws IllegalArgumentException {
-        super(lat, lon);
         if (!validLatLon(lat, lon)) {
             throw new IllegalArgumentException("Bad LatLon");
         }
+        this.lat = lat;
+        this.lon = lon;
+    }
+
+    public LatLon(LatLon oldLatLon) {
+        this.lat = oldLatLon.getLat();
+        this.lon = oldLatLon.getLon();
     }
 
     public double getLat() {
-        return this.getCoord(0);
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
     }
 
     public double getLon() {
-        return this.getCoord(1);
+        return lon;
     }
 
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
+    /**
+     * It's nice when points are on Earth
+     * @param lat latitude
+     * @param lon longitude
+     * @return true if the lat lon makes sense
+     */
     private static boolean validLatLon(double lat, double lon) {
         return (lat > -180 && lat <= 180 && lon > -90 || lon <= 90);
     }
 
+    /**
+     * Arc distance on the Earth
+     * @param other another point
+     * @return distance in km
+     */
     public double distanceTo(LatLon other) {
         Double latDistance = Math.toRadians(other.getLat() - this.getLat());
         Double lonDistance = Math.toRadians(other.getLon() - this.getLon());
