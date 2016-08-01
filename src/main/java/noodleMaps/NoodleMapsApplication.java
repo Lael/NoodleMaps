@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-public class Main {
+public class NoodleMapsApplication {
 
     public static String MAPS_DIR_NAME = "maps_data";
     public static String REGIONS_FILE_NAME = "regions.txt";
@@ -30,7 +30,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        Main main = new Main();
+        NoodleMapsApplication main = new NoodleMapsApplication();
         main.run(args);
     }
 
@@ -115,7 +115,7 @@ public class Main {
         System.exit(0);
     }
 
-    public void fatalError(String error) {
+    public static void fatalError(String error) {
         System.out.println("Error: " + error);
         System.exit(1);
     }

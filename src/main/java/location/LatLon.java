@@ -41,7 +41,7 @@ public class LatLon {
      * @return true if the lat lon makes sense
      */
     private static boolean validLatLon(double lat, double lon) {
-        return (lat > -180 && lat <= 180 && lon > -90 || lon <= 90);
+        return (lat >= -180 && lat < 180 && lon >= -90 || lon < 90);
     }
 
     /**
@@ -60,5 +60,13 @@ public class LatLon {
                 * Math.sin(lonDistance / 2);
         Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return EARTH_RADIUS_KM * c * 1000; // convert to meters
+    }
+
+    @Override
+    public String toString() {
+        return "LatLon{" +
+                ", lat=" + lat +
+                ", lon=" + lon +
+                '}';
     }
 }

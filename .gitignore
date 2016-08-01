@@ -36,3 +36,4 @@ fabric.properties
 /target/
 /maps_data/
 .DS_STORE
+.mvn-classpath

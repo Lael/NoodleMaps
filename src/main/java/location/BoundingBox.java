@@ -49,4 +49,12 @@ public class BoundingBox {
     public double getS() {
         return sw.getLon();
     }
+
+    @Override
+    public String toString() {
+        return "BoundingBox{" +
+                "sw=" + sw.toString() +
+                ", ne=" + ne.toString() +
+                '}';
+    }
 }

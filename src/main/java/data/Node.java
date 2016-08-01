@@ -8,6 +8,7 @@ public class Node {
     private LatLon latLon;
 
     public Node() {
+        this.latLon = new LatLon(0, 0);
     }
 
     public Node(long id, Double latitude, Double longitude) {
