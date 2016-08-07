@@ -46,7 +46,7 @@ public class Node {
     }
 
     public String getInsertMessage() {
-        String sql = "insert into node " +
+        String sql = "add into node " +
                 "(id, latitude, longitude) " +
                 "values " +
                 "(" + id + ", " +

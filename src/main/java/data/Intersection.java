@@ -24,7 +24,7 @@ public class Intersection {
     }
 
     public String getInsertMessage() {
-        String sql = "insert into intersection " +
+        String sql = "add into intersection " +
                 "(node_id, way_id, position) " +
                 "values " +
                 "(" + nodeId + ", " +

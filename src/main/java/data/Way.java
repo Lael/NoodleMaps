@@ -76,7 +76,7 @@ public class Way {
     }
 
     public String getInsertMessage() {
-        String sql = "insert into way " +
+        String sql = "add into way " +
                 "(id, num_nodes, highway_type, street_name, land_use, building, closed, one_way, length) " +
                 "values " +
                 "(" + id + ", " +

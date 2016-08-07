@@ -35,7 +35,6 @@ public class FileEater {
      * @throws IOException
      */
     public void consumeXml(InputStream stream) throws XMLStreamException, IOException, XMLParseException, SQLException {
-        System.out.println("Eating a file!");
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         XMLStreamReader reader = inputFactory.createXMLStreamReader(stream);
 

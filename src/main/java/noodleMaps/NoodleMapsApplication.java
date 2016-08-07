@@ -1,18 +1,19 @@
 package noodleMaps;
 
-import data.FileEater;
+import autocorrect.Trie;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
 
 public class NoodleMapsApplication {
 
@@ -76,18 +77,39 @@ public class NoodleMapsApplication {
             NoodleRepl repl = new NoodleRepl(startLat, startLon);
         }
 
-        Date start = new Date();
-        System.out.println(start.toString());
+//        Date start = new Date();
 
+//        System.out.println(start.toString());
+//
+//        try {
+//            FileEater fileEater = new FileEater(connection);
+//            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.440,41.760.xml"));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            fatalError(e.getLocalizedMessage());
+//        }
+//        Date end = new Date();
+//        System.out.println(end.toString());
+        Trie trie = new Trie();
         try {
-            FileEater fileEater = new FileEater(connection);
-            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.440,41.760.xml"));
+            Scanner scanner = new Scanner(new File("/Users/laelcosta/Desktop/dictionary.txt"));
+            while (scanner.hasNextLine()) {
+                String word = scanner.nextLine();
+                trie.add(word);
+            }
+            System.out.println("--- abc ---");
+            long start_time = System.nanoTime();
+            List<String> words = trie.wordsWithinDistance("abc", 0);
+            long end_time = System.nanoTime();
+            double difference = (end_time - start_time)/1e9;
+            for (String s : words) {
+                System.out.println(s);
+            }
+            System.out.println("--- --- ---");
+            System.out.println(difference + "s");
         } catch (Exception e) {
             e.printStackTrace();
-//            fatalError(e.getLocalizedMessage());
         }
-        Date end = new Date();
-        System.out.println(end.toString());
 
 
         try {
