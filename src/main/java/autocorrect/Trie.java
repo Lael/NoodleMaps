@@ -5,9 +5,44 @@ import com.google.common.collect.Lists;
 import java.util.*;
 
 public class Trie {
-    private boolean end = false;
+    private int wordOccurrences = 0;
     private Character c = null;
     private Map<Character, Trie> children = new HashMap<Character, Trie>();
+
+    private class Word implements Comparable<Word> {
+        private String word;
+        private int led;
+        private int unigram;
+
+        private Word(String word, int led, int unigram) {
+            this.word = word;
+            this.led = led;
+            this.unigram = unigram;
+        }
+
+        public String toString() {
+            return word;
+        }
+
+        private Word prepend(String s) {
+            word = s + word;
+            return this;
+        }
+
+        private void setLed(int led) {
+            this.led = led;
+        }
+
+        public int compareTo(Word o) {
+            if (this.led != o.led) {
+                return o.led - this.led;
+            }
+            if (this.unigram != o.unigram) {
+                return this.unigram - o.unigram;
+            }
+            return this.word.compareTo(o.word);
+        }
+    }
 
     public Trie() {
 
@@ -17,44 +52,20 @@ public class Trie {
         this.c = c;
     }
 
-     public void add(String s) {
-         if (s.isEmpty()) {
-             end = true;
-             return;
-         }
+    public void add(String s) {
+        if (s.isEmpty()) {
+            wordOccurrences += 1;
+            return;
+        }
 
-         char first = s.charAt(0);
-         Trie child = children.get(first);
-         if (child == null) {
-             child = new Trie(first);
-         }
+        char first = s.charAt(0);
+        Trie child = children.get(first);
+        if (child == null) {
+            child = new Trie(first);
+        }
 
-         child.add(s.substring(1));
-         children.put(first, child);
-     }
-
-    public boolean isEnd() {
-        return end;
-    }
-
-    public void setEnd(boolean end) {
-        this.end = end;
-    }
-
-    public Character getC() {
-        return c;
-    }
-
-    public void setC(Character c) {
-        this.c = c;
-    }
-
-    public Map<Character, Trie> getChildren() {
-        return children;
-    }
-
-    public void setChildren(Map<Character, Trie> children) {
-        this.children = children;
+        child.add(s.substring(1));
+        children.put(first, child);
     }
 
     public void printTrie() {
@@ -64,7 +75,7 @@ public class Trie {
 
     private void printHelper(String spaces) {
         if (c != null) {
-            System.out.println(spaces + c + (end ? "." : ""));
+            System.out.println(spaces + c + (wordOccurrences > 0 ? "." : ""));
         }
         Collection<Trie> tries = children.values();
         for (Trie trie : tries) {
@@ -72,54 +83,53 @@ public class Trie {
         }
     }
 
-    public List<String> words() {
-        List<String> words = Lists.newArrayList();
-
-        if (end) {
-            words.add(String.valueOf(c));
+    public List<Word> words() {
+        List<Word> words = Lists.newArrayList();
+        if (wordOccurrences > 0) {
+            words.add(new Word(String.valueOf(c), -1, wordOccurrences));
         }
 
         Collection<Trie> tries = children.values();
+        String toPrepend = (c == null) ? "" : String.valueOf(c);
         for (Trie trie : tries) {
-            List<String> suffixes = trie.words();
-            for (String s : suffixes) {
-                words.add((c == null ? "" : c) + s);
+            List<Word> suffixes = trie.words();
+            for (Word w : suffixes) {
+                w.prepend(toPrepend);
             }
+            words.addAll(suffixes);
         }
-
         return words;
     }
 
-    public List<String> wordsWithPrefix(String prefix) {
+    public List<Word> wordsWithPrefix(String prefix) {
         if (prefix.isEmpty()) {
             return words();
         }
 
-        List<String> words = Lists.newArrayList();
-
+        List<Word> words = Lists.newArrayList();
         Trie trie = children.get(prefix.charAt(0));
         if (trie == null) {
             return words;
         }
 
-        List<String> suffixes = trie.wordsWithPrefix(prefix.substring(1));
-        for (String suffix : suffixes) {
-            words.add((c == null ? "" : c)  + suffix);
+        words = trie.wordsWithPrefix(prefix.substring(1));
+        String toPrepend = (c == null) ? "" : String.valueOf(c);
+        for (Word w : words) {
+            w.prepend(toPrepend);
         }
-
         return words;
     }
 
-    private void levenshteinHelper(Trie trie, String sofar, String prefix, Integer[] row, int led, List<String> words) {
+    private void levenshteinHelper(Trie trie, String sofar, String prefix, Integer[] row, int led, List<Word> words) {
         int len = row.length;
         Integer[] newRow = new Integer[len];
         newRow[0] = row[0] + 1;
 
-        // this is a good prefix, done here
         if (sofar.length() == len - 1) {
-            List<String> theseWords = trie.words();
-            for (String s : theseWords) {
-                words.add(sofar + s);
+            List<Word> theseWords = trie.words();
+            for (Word w : theseWords) {
+                w.setLed(row[len - 1]);
+                words.add(w.prepend(sofar));
             }
             return;
         }
@@ -136,13 +146,11 @@ public class Trie {
             newRow[i] = Math.min(replace, Math.min(insert, delete));
         }
 
-        if (trie.end && newRow[len - 1] <= led) {
-            words.add(sofar + trie.c);
+        if (trie.wordOccurrences > 0 && newRow[len - 1] <= led) {
+            Word word = new Word(sofar + trie.c, newRow[len - 1], trie.wordOccurrences);
+            words.add(word);
         }
 
-
-
-        // it's worth continuing down this path
         if (Collections.min(Arrays.asList(newRow)) <= led) {
             for (Trie child : trie.children.values()) {
                 levenshteinHelper(child, sofar + trie.c, prefix, newRow, led, words);
@@ -150,22 +158,29 @@ public class Trie {
         }
     }
 
-    public List<String> wordsWithinDistance(String prefix, int led) {
+    public List<Word> wordsWithinDistance(String prefix, int led) {
         int len = prefix.length();
         if (len == 0) {
             return Lists.newArrayList();
         }
-
         Integer[] row = new Integer[len + 1];
         for (int i = 0; i < len + 1; i++) {
             row[i] = i;
         }
-
-        List<String> words = Lists.newArrayList();
+        List<Word> words = Lists.newArrayList();
         for (Trie trie : children.values()) {
             levenshteinHelper(trie, "", prefix, row, Math.min(led, len - 1), words);
         }
-
         return words;
+    }
+
+    public List<String> autocorrect(String word, int led, int limit) {
+        List<String> strings = Lists.newArrayList();
+        List<Word> words = wordsWithinDistance(word, led);
+        Collections.sort(words);
+        for (int i = 0; i < Math.min(words.size(), limit); i++) {
+            strings.add(words.get(i).toString());
+        }
+        return strings;
     }
 }

@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -93,20 +92,22 @@ public class NoodleMapsApplication {
         Trie trie = new Trie();
         try {
             Scanner scanner = new Scanner(new File("/Users/laelcosta/Desktop/dictionary.txt"));
+            int numWords = 0;
             while (scanner.hasNextLine()) {
                 String word = scanner.nextLine();
+                numWords ++;
                 trie.add(word);
             }
-            System.out.println("--- abc ---");
+            System.out.println("--- abcd ---");
             long start_time = System.nanoTime();
-            List<String> words = trie.wordsWithinDistance("abc", 0);
+            List<String> words = trie.autocorrect("abcd", 1, 5);
             long end_time = System.nanoTime();
             double difference = (end_time - start_time)/1e9;
             for (String s : words) {
                 System.out.println(s);
             }
-            System.out.println("--- --- ---");
-            System.out.println(difference + "s");
+            System.out.println("--- ---- ---");
+            System.out.println("Autocorrected from " + numWords + " words in " + difference + "s");
         } catch (Exception e) {
             e.printStackTrace();
         }
