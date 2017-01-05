@@ -1,5 +1,7 @@
 package data;
 
+import autocorrect.Trie;
+
 import javax.management.modelmbean.XMLParseException;
 import javax.xml.stream.XMLStreamException;
 
@@ -13,14 +15,24 @@ import java.sql.Statement;
 
 import static javax.xml.stream.XMLStreamConstants.*;
 
+/**
+ * Tosses XML data into the database.
+ */
 public class FileEater {
 
     private Connection connection;
     private Statement statement;
+    private Trie trie;
 
-    public FileEater(Connection connection) throws SQLException {
+    public FileEater(Connection connection, Trie trie) {
         this.connection = connection;
-        this.statement = this.connection.createStatement();
+        this.trie = trie;
+        try {
+            this.statement = this.connection.createStatement();
+        } catch (SQLException e) {
+            // TODO: not this
+            System.exit(1);
+        }
     }
 
     private void insertObject(String sql) throws SQLException {
@@ -30,7 +42,7 @@ public class FileEater {
     /**
      * Isn't very careful about XML format!
      *
-     * @param stream the file
+     * @param stream the file as a stream
      * @throws XMLStreamException
      * @throws IOException
      */
@@ -120,6 +132,7 @@ public class FileEater {
                         way.setOneWay(true);
                     } else if (k.equals("name")) {
                         way.setName(v);
+                        trie.add(v);
                     } else if (k.equals("highway")) {
                         way.setHighway(v);
                     }

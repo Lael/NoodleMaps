@@ -20,10 +20,6 @@ public class Trie {
             this.unigram = unigram;
         }
 
-        public String toString() {
-            return word;
-        }
-
         private Word prepend(String s) {
             word = s + word;
             return this;
@@ -35,12 +31,25 @@ public class Trie {
 
         public int compareTo(Word o) {
             if (this.led != o.led) {
-                return o.led - this.led;
+                return this.led - o.led;
             }
             if (this.unigram != o.unigram) {
-                return this.unigram - o.unigram;
+                return o.unigram - this.unigram;
             }
             return this.word.compareTo(o.word);
+        }
+
+        public String getString() {
+            return word;
+        }
+
+        @Override
+        public String toString() {
+            return "Word{" +
+                    "word='" + word + '\'' +
+                    ", led=" + led +
+                    ", unigram=" + unigram +
+                    '}';
         }
     }
 
@@ -97,25 +106,6 @@ public class Trie {
                 w.prepend(toPrepend);
             }
             words.addAll(suffixes);
-        }
-        return words;
-    }
-
-    public List<Word> wordsWithPrefix(String prefix) {
-        if (prefix.isEmpty()) {
-            return words();
-        }
-
-        List<Word> words = Lists.newArrayList();
-        Trie trie = children.get(prefix.charAt(0));
-        if (trie == null) {
-            return words;
-        }
-
-        words = trie.wordsWithPrefix(prefix.substring(1));
-        String toPrepend = (c == null) ? "" : String.valueOf(c);
-        for (Word w : words) {
-            w.prepend(toPrepend);
         }
         return words;
     }
@@ -179,7 +169,7 @@ public class Trie {
         List<Word> words = wordsWithinDistance(word, led);
         Collections.sort(words);
         for (int i = 0; i < Math.min(words.size(), limit); i++) {
-            strings.add(words.get(i).toString());
+            strings.add(words.get(i).getString());
         }
         return strings;
     }

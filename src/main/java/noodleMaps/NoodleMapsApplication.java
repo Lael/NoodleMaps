@@ -1,9 +1,11 @@
 package noodleMaps;
 
 import autocorrect.Trie;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
+import io.dropwizard.Application;
+import io.dropwizard.setup.Environment;
 import org.apache.commons.io.FileUtils;
+import server.NoodleResource;
+import server.NoodleService;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +16,9 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Scanner;
 
-public class NoodleMapsApplication {
+public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> {
 
     public static String MAPS_DIR_NAME = "maps_data";
-    public static String REGIONS_FILE_NAME = "regions.txt";
     public static String DATABASE_FILE_NAME = "noodle_maps.data";
     public static String TILES_DIR_NAME = "tiles";
     public static String XML_DIR_NAME = "data";
@@ -25,144 +26,28 @@ public class NoodleMapsApplication {
     private final String jdbcDriver = "org.sqlite.JDBC";
     private final String dbUrlBase = "jdbc:sqlite:";
 
-    private double startLat = 41.75;
-    private double startLon = -71.45;
-
-
-    public static void main(String[] args) {
-        NoodleMapsApplication main = new NoodleMapsApplication();
-        main.run(args);
+    public static void main(String[] args) throws Exception {
+        new NoodleMapsApplication().run(args);
     }
 
-    private void run(String[] args) {
-        OptionSet options = checkArgs(args);
-
-        /* -h, -C, */
-        if (options.has("h")) {
-            helpMessage();
-        }
-
-        if (options.has("C")) {
-            cleanDirectory();
-            System.out.println("Bye!");
-            System.exit(0);
-        }
-
-        if (options.has("c")) {
-            cleanDirectory();
-        }
-
-        if (options.has("t")) {
-            startLat = (Double) options.valueOf("t");
-            if (options.has("n")) {
-                startLon = (Double) options.valueOf("n");
-            } else {
-                fatalError("The options -t and -n must be used together or not at all.");
-            }
-        } else {
-            if (options.has("n")) {
-                fatalError("The options -t and -n must be used together or not at all.");
-            }
-        }
-
+    public void run(NoodleMapsConfiguration noodleMapsConfiguration, Environment environment) throws Exception {
+        cleanDirectory();
         System.out.println("Welcome to NoodleMaps!");
         System.out.println("Verifying directory...");
-        Connection connection = verifyDirectoryAndDatabase();
-
+        final Connection connection = verifyDirectoryAndDatabase();
         System.out.println("Starting up...");
-        if (options.has("g")) {
-            NoodleServer server = new NoodleServer(startLat, startLon, options.has("a"));
-        } else {
-            NoodleRepl repl = new NoodleRepl(startLat, startLon);
-        }
-
-//        Date start = new Date();
-
-//        System.out.println(start.toString());
-//
-//        try {
-//            FileEater fileEater = new FileEater(connection);
-//            fileEater.consumeXml(new FileInputStream("map_data/map_data-71.450,41.750,-71.440,41.760.xml"));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            fatalError(e.getLocalizedMessage());
-//        }
-//        Date end = new Date();
-//        System.out.println(end.toString());
-        Trie trie = new Trie();
-        try {
-            Scanner scanner = new Scanner(new File("/Users/laelcosta/Desktop/dictionary.txt"));
-            int numWords = 0;
-            while (scanner.hasNextLine()) {
-                String word = scanner.nextLine();
-                numWords ++;
-                trie.add(word);
-            }
-            System.out.println("--- abcd ---");
-            long start_time = System.nanoTime();
-            List<String> words = trie.autocorrect("abcd", 1, 5);
-            long end_time = System.nanoTime();
-            double difference = (end_time - start_time)/1e9;
-            for (String s : words) {
-                System.out.println(s);
-            }
-            System.out.println("--- ---- ---");
-            System.out.println("Autocorrected from " + numWords + " words in " + difference + "s");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            connection.close();
-        } catch (Exception e) {
-            fatalError(e.getLocalizedMessage());
-        }
-    }
-
-
-    private void usageError() {
-        System.out.println("Usage: ./noodleMaps [-acCgh] [-t <lat> -n <lon>] [-s <size>]");
-        System.exit(1);
-    }
-
-    private void helpMessage() {
-        System.out.println("-h                display this information and exit");
-        System.out.println("-c                clean up directories before running");
-        System.out.println("-C                clean and exit");
-        System.out.println("-a                employ autocorrect if the gui flag is set");
-        System.out.println("-g                start the gui on a local server");
-        System.out.println("-t <latitude>     specify starting center point latitude; must be used with -n");
-        System.out.println("-n <longitude>    specify starting center point longitude; must be used with -t");
-
-        System.exit(0);
+        final NoodleService service = new NoodleService(
+                connection,
+                new Trie(),
+                noodleMapsConfiguration.getMaxLed(),
+                noodleMapsConfiguration.getNumSuggestions());
+        final NoodleResource resource = new NoodleResource(service);
+        environment.jersey().register(resource);
     }
 
     public static void fatalError(String error) {
         System.out.println("Error: " + error);
         System.exit(1);
-    }
-
-
-
-    private OptionSet checkArgs(String[] args) {
-        OptionParser parser = new OptionParser();
-
-        parser.accepts("a");
-        parser.accepts("c");
-        parser.accepts("C");
-        parser.accepts("g");
-        parser.accepts("h");
-        parser.accepts("n").withRequiredArg().ofType(Double.class);
-        parser.accepts("s").withRequiredArg().ofType(Double.class);
-
-        OptionSet options = null;
-        try {
-            options = parser.parse(args);
-        } catch (Exception e) {
-            usageError();
-        }
-        return options;
     }
 
     private File checkForDirectory(File parent, String directory) {
@@ -304,7 +189,6 @@ public class NoodleMapsApplication {
         File directory = checkForDirectory(null, MAPS_DIR_NAME);
 
         // check that directory contains files regions.txt and noodle_maps.data, and directory tiles
-        checkForFile(directory, REGIONS_FILE_NAME);
         File database = checkForFile(directory, DATABASE_FILE_NAME);
 
         checkForDirectory(directory, TILES_DIR_NAME);

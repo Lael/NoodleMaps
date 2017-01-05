@@ -12,14 +12,22 @@ import java.text.DecimalFormat;
 
 public class Downloader {
 
-    private static final String URL_BASE = "";
-    private static final String FILENAME_BASE = "";
+    private static final String URL_BASE = "http://overpass-api.de/api/map?bbox=";
+    private static final String FILENAME_BASE = "maps_data/data/x";
 
-    private static File downloadBox(BoundingBox box) throws IOException {
+    /**
+     * Downloads a bounding box worth of data from OSM
+     * @param box a bounding box to download
+     * @return a File object containing the downloaded file
+     * @throws IOException
+     */
+    public static File downloadBox(BoundingBox box, long id) throws IOException {
         String latLonString = boxToString(box);
         System.out.println(latLonString);
 
-        File mapFile = new File("maps_data/x" + latLonString + ".xml");
+        String fileName = FILENAME_BASE + id + ".xml";
+        System.out.println(fileName);
+        File mapFile = new File(fileName);
         boolean fileExists;
 
         fileExists = !mapFile.createNewFile();
@@ -41,16 +49,15 @@ public class Downloader {
     }
 
     /**
-     *
-     * @param box
-     * @return
+     * Stringifies a box
+     * @param box a bounding box
+     * @return a string representation of the box
      */
     private static String boxToString(BoundingBox box) {
-        DecimalFormat df = new DecimalFormat("#.0");
+        DecimalFormat df = new DecimalFormat("0.00");
         return df.format(box.getS()) + "," +
                 df.format(box.getW()) + "," +
                 df.format(box.getN()) + "," +
                 df.format(box.getE());
-
     }
 }

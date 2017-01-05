@@ -1,7 +1,9 @@
 package data;
 
 import location.LatLon;
-
+/**
+ * Node class. Models the node table; each node is derived from an OSM entry.
+ */
 public class Node {
 
     private long id;
@@ -33,10 +35,6 @@ public class Node {
         return latLon;
     }
 
-    public void setLatLon(LatLon latLon) {
-        this.latLon = latLon;
-    }
-
     public void setLat(double lat) {
         this.latLon.setLat(lat);
     }
@@ -46,7 +44,7 @@ public class Node {
     }
 
     public String getInsertMessage() {
-        String sql = "add into node " +
+        String sql = "insert into node " +
                 "(id, latitude, longitude) " +
                 "values " +
                 "(" + id + ", " +

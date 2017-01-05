@@ -1,5 +1,8 @@
 package data;
 
+/**
+ * Way class. Models the way table; each way is derived from an OSM entry.
+ */
 public class Way {
     private long id = -1;
     private boolean closed = false;
@@ -76,7 +79,7 @@ public class Way {
     }
 
     public String getInsertMessage() {
-        String sql = "add into way " +
+        String sql = "insert into way " +
                 "(id, num_nodes, highway_type, street_name, land_use, building, closed, one_way, length) " +
                 "values " +
                 "(" + id + ", " +

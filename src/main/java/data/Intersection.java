@@ -1,5 +1,7 @@
 package data;
-
+/**
+ * Intersection class. Models the intersection table; each intersection joins a way and a node.
+ */
 public class Intersection {
     private long wayId;
     private long nodeId;
@@ -24,7 +26,7 @@ public class Intersection {
     }
 
     public String getInsertMessage() {
-        String sql = "add into intersection " +
+        String sql = "insert into intersection " +
                 "(node_id, way_id, position) " +
                 "values " +
                 "(" + nodeId + ", " +

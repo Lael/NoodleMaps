@@ -8,8 +8,10 @@ public class KdTree {
     private KdTree left, right;
     private int axis;
     private int size;
+    private int k;
 
-    public KdTree() {
+    public KdTree(int k) {
+        this.k = k;
     }
 
     public KdTree(Node element, KdTree left, KdTree right, int axis) {
@@ -52,7 +54,7 @@ public class KdTree {
         if (left == null) {
             /* compare to element and shuffle */
 
-            left = new KdTree(node, (axis + 1) % 2);
+            left = new KdTree(node, (axis + 1) % k);
             return;
         }
     }

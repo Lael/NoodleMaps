@@ -1,7 +1,7 @@
 package location;
 
 public class LatLon {
-    public final int EARTH_RADIUS_KM = 6371; // Radius of the earth in km
+    private static final int EARTH_RADIUS_KM = 6371; // Radius of the earth in km
     private double lat;
     private double lon;
 
@@ -65,7 +65,7 @@ public class LatLon {
     @Override
     public String toString() {
         return "LatLon{" +
-                ", lat=" + lat +
+                "lat=" + lat +
                 ", lon=" + lon +
                 '}';
     }
