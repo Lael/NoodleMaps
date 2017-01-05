@@ -1,6 +1,7 @@
 package data;
 
 import autocorrect.Trie;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import javax.management.modelmbean.XMLParseException;
 import javax.xml.stream.XMLStreamException;

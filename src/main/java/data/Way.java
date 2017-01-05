@@ -1,5 +1,7 @@
 package data;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 /**
  * Way class. Models the way table; each way is derived from an OSM entry.
  */
@@ -83,11 +85,11 @@ public class Way {
                 "(id, num_nodes, highway_type, street_name, land_use, building, closed, one_way, length) " +
                 "values " +
                 "(" + id + ", " +
-                numNodes + ", '" +
-                highway + "', '" +
-                name + "', '" +
-                landuse + "', '" +
-                building + "', " +
+                numNodes + ", \"" +
+                highway + "\", \"" +
+                name + "\", \"" +
+                landuse + "\", \"" +
+                building + "\", " +
                 ((closed) ? 1 : 0) + ", " +
                 ((oneWay) ? 1 : 0) + ", " +
                 length + ");";

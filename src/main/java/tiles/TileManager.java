@@ -1,12 +1,10 @@
 package tiles;
 
 import autocorrect.Trie;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import data.Downloader;
-import data.DrawWay;
 import data.FileEater;
 import data.MapsDB;
 import location.BoundingBox;
@@ -14,6 +12,9 @@ import location.LatLon;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -57,7 +58,13 @@ public class TileManager {
         drawnIds.add(id);
     }
 
-    public List<DrawWay> fetchTileData(Tile tile) {
+    private void inscribe(Long id, String data) throws Exception {
+        String fileName = "maps_data/tiles/t" + id.toString() + ".json";
+        PrintWriter out = new PrintWriter(fileName);
+        out.println(data);
+    }
+
+    public String fetchTileData(Tile tile) {
         Long id = tile.getId();
         if (!isDownloaded(id)) {
             // download it
@@ -66,7 +73,7 @@ public class TileManager {
                 File dl = Downloader.downloadBox(bigBox, id);
                 fileEater.consumeXml(new FileInputStream(dl));
             } catch (Exception e) {
-                System.err.println(e.getLocalizedMessage());
+                e.printStackTrace();
                 return null;
             }
             // add all smaller tiles
@@ -83,24 +90,35 @@ public class TileManager {
             }
         }
 
-        List<DrawWay> drawWays = Lists.newArrayList();
+        String drawWaysJson;
 
         if (!isDrawn(id)) {
             // draw it
             System.out.println("Drawing a tile!");
-            drawWays = mapsDB.fillTile(tile);
+            List drawWays = mapsDB.fillTile(tile);
             GsonBuilder builder = new GsonBuilder();
             Gson gson = builder.create();
-            String drawWaysJson = gson.toJson(drawWays);
-            System.out.println("drawWaysJson = " + drawWaysJson);
-            // add it
-            addDrawn(id);
-        } else {
+            drawWaysJson = gson.toJson(drawWays);
 
+            // add it
+            try {
+                inscribe(id, drawWaysJson);
+                addDrawn(id);
+            } catch (Exception e) {
+                System.out.println("Possibly failed to write tile JSON!");
+                return "[]";
+            }
+        } else {
+            try {
+                drawWaysJson = new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id.toString() + ".json")));
+            } catch (Exception e) {
+                System.out.println("Could not read!");
+                return "[]";
+            }
         }
 
 
         // return drawn tile JSON
-        return drawWays;
+        return drawWaysJson;
     }
 }

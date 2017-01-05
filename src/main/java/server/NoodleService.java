@@ -34,7 +34,7 @@ public class NoodleService {
         return trie.autocorrect(word, maxLed, numSuggestions);
     }
 
-    public List<DrawWay> fetchTile(int zoom, LatLon latLon) {
+    public String fetchTile(int zoom, LatLon latLon) {
         System.out.println("Tile request: (" + latLon + ", " + zoom + ").");
         return tileManager.fetchTileData(new Tile(zoom, latLon));
     }

@@ -1,0 +1,302 @@
+body {
+  margin: 0;
+  font-family: garamond;
+}
+
+.project, .employment {
+  width: 80%;
+  margin: 0 calc(10% - 4px);
+}
+
+.home-text {
+  margin-left: 10px;
+}
+
+.photo {
+  width: 80%;
+  margin: 30px 10%;
+}
+
+#bar {
+  margin-bottom: 10px;
+}
+
+.content-wrap {
+  display: inline;
+  margin-bottom: 20px;
+}
+
+.content-section p {
+  vertical-align: top;
+}
+
+#code, #art, #experience {
+  display: none;
+}
+
+#header {
+  background-color: #782626;
+  color: white;
+  padding: 15px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 200%;
+  font-variant: small-caps;
+  width: 100%;}
+
+#name {
+  display: inline-block;
+  cursor: pointer;
+}
+
+#home-burger {
+  width: 36px;
+  height: 36px;
+  float: right;
+  position: relative;
+  right: 28px;
+  cursor: pointer;
+}
+
+#nav ul {
+  position: relative;
+  text-align: center;
+  padding: 5px;
+  margin: 0;
+}
+
+#nav li {
+  list-style-type: none;
+  font-size: 1.5em;
+  line-height: 1.3em;
+  padding: 0;
+  cursor: pointer;
+}
+
+#nav li:hover { color: #808080; }
+
+.selected-link { color: #808080; }
+
+.link-img {
+  display: none;
+  width: 32px;
+  height: 32px;
+}
+
+#nav {
+  display: none;
+  margin: 0;
+  top: 0;
+  right: 0;
+  position: relative;
+  z-index: 10;
+  width: 100vw;
+  -webkit-box-shadow: 4px 4px 32px -1px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 32px -1px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 32px -1px rgba(0,0,0,0.75);
+  background-color: white;
+}
+
+.footer {
+  margin-top: 25px;
+  text-align: center;
+  clear: both;
+  position: relative;
+  top: 25px;
+}
+
+.mobile-open { display: block !important; }
+
+.content-image {
+  float: left;
+  width: 40%;
+  margin: 0 10px 10px 10px;
+  display: inline;
+}
+
+.second-image {
+  float: right;
+  width: 40%;
+  margin: 0 10px 10px 10px;
+  display: inline;
+}
+
+@media only screen and (min-width: 380px) {
+  #header {
+    font-size: 3em;
+  }
+  #home-burger {
+    width: 54px;
+    height: 54px;
+    right: 30px;
+  }
+  #nav ul {
+    padding: 10px;
+  }
+  #nav li {
+    font-size: 2em;
+    line-height: 1.5em;
+  }
+}
+
+@media only screen and (min-width: 500px) {
+  body {
+    margin: 8px;
+  }
+
+  .mobile-open {
+    display: inline-block !important;
+  }
+
+  #bar {
+    width: 100%;
+    margin-bottom: 25px;
+  }
+
+  #header {
+    display: inline-block;
+  }
+
+  #name {
+    display: inline-block;
+  }
+
+  .link-text {
+    display: none;
+  }
+
+  .link-img {
+    display: inline-block;
+    width: 1.5em;
+    height: 1.5em;
+  }
+
+  #nav {
+    width: calc(60% - 40px);
+    display: inline-block;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    position: static;
+    vertical-align: middle;
+  }
+
+  #nav ul {
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    height: calc(40px + 3em);
+  }
+
+  #nav li {
+    display: inline-block;
+    list-style-type: none;
+    font-size: 2.2em;
+    line-height: 1em;
+    padding: 0 calc(15% - 0.75em);
+    padding-top: 15px;
+    cursor: pointer;
+  }
+
+  #header {
+    border: solid black 2px;
+    font-size: 2em;
+    width: 40%;
+    text-align: center;
+  }
+
+  #home-burger {
+    display: none;
+  }
+
+  #home-link {
+    display: none !important;
+  }
+
+  .content-image {
+    margin: 0 10px 0 0;
+    border: solid black 2px;
+    width: calc(40% + 30px);
+  }
+}
+
+@media only screen and (min-width: 900px) {
+  .home-text {
+    font-size: 1.5em;
+  }
+  .link-img {
+    display: none;
+  }
+
+  .selected-link {
+    text-decoration: underline;
+  }
+
+  .link-text {
+    font-size: 0.75em;
+    margin: 0;
+    display: inline-block;
+    text-decoration: inherit;
+  }
+
+  #home-link {
+    display: inline-block;
+  }
+
+  #nav li {
+    padding: 0 calc(15% - 60px);
+    padding-top: 25px;
+  }
+
+  .home {
+    text-align: center;
+  }
+
+  #header {
+    font-size: 3em;
+  }
+
+  .photo {
+    width: 720px;
+    margin: 30px calc(50% - 364px);
+  }
+
+  .content-image {
+    margin-right: calc(5% - 10px);
+  }
+
+  .project, .employment {
+    font-size: 1.5em;
+  }
+}
+
+/* fix home content */
+@media only screen and (min-width: 1000px) {
+  .content-image {
+    width: 426px;
+    margin-right: 40px;
+  }
+  .home-text {
+    width: 974px;
+  }
+
+  #home {
+    width: 984px;
+    margin-left: calc(40% - 396px);
+    margin-right: calc(60% - 552px);
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  #name {
+    font-size: 1.2em;
+    padding: 10px;
+  }
+}
+
+@media only screen and (min-width: 1800px) {
+  body {
+    margin: 8px calc(50% - 900px);
+    width: 1800px;
+  }
+}
