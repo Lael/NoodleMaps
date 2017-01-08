@@ -1,7 +1,10 @@
 package noodleMaps;
 
 import autocorrect.Trie;
+import healthChecks.DatabaseHealthCheck;
 import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.apache.commons.io.FileUtils;
 import server.NoodleResource;
@@ -13,8 +16,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Scanner;
 
 public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> {
 
@@ -30,11 +31,17 @@ public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> 
         new NoodleMapsApplication().run(args);
     }
 
+    @Override
+    public void initialize(Bootstrap<NoodleMapsConfiguration> bootstrap) {
+        bootstrap.addBundle(new AssetsBundle("/assets", "/", "index.html"));
+    }
+
     public void run(NoodleMapsConfiguration noodleMapsConfiguration, Environment environment) throws Exception {
         cleanDirectory();
         System.out.println("Welcome to NoodleMaps!");
         System.out.println("Verifying directory...");
         final Connection connection = verifyDirectoryAndDatabase();
+        environment.healthChecks().register("Database", new DatabaseHealthCheck(connection));
         System.out.println("Starting up...");
         final NoodleService service = new NoodleService(
                 connection,
@@ -42,6 +49,7 @@ public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> 
                 noodleMapsConfiguration.getMaxLed(),
                 noodleMapsConfiguration.getNumSuggestions());
         final NoodleResource resource = new NoodleResource(service);
+        environment.jersey().setUrlPattern("/api/*");
         environment.jersey().register(resource);
     }
 

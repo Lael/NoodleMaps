@@ -1,10 +1,12 @@
 package tiles;
 
 import autocorrect.Trie;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import data.Downloader;
+import data.DrawWay;
 import data.FileEater;
 import data.MapsDB;
 import location.BoundingBox;
@@ -64,7 +66,7 @@ public class TileManager {
         out.println(data);
     }
 
-    public String fetchTileData(Tile tile) {
+    public List<DrawWay> fetchTileData(Tile tile) {
         Long id = tile.getId();
         if (!isDownloaded(id)) {
             // download it
@@ -90,35 +92,35 @@ public class TileManager {
             }
         }
 
-        String drawWaysJson;
+        GsonBuilder gb = new GsonBuilder();
+        Gson gson = gb.create();
+        List drawWays;
 
         if (!isDrawn(id)) {
             // draw it
             System.out.println("Drawing a tile!");
-            List drawWays = mapsDB.fillTile(tile);
-            GsonBuilder builder = new GsonBuilder();
-            Gson gson = builder.create();
-            drawWaysJson = gson.toJson(drawWays);
+            drawWays = mapsDB.fillTile(tile);
 
+            String drawWaysJson = gson.toJson(drawWays);
             // add it
             try {
                 inscribe(id, drawWaysJson);
                 addDrawn(id);
             } catch (Exception e) {
                 System.out.println("Possibly failed to write tile JSON!");
-                return "[]";
+                return Lists.newArrayList();
             }
         } else {
             try {
-                drawWaysJson = new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id.toString() + ".json")));
+                drawWays = gson.fromJson(new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id.toString() + ".json"))), List.class);
             } catch (Exception e) {
                 System.out.println("Could not read!");
-                return "[]";
+                return Lists.newArrayList();
             }
         }
 
 
         // return drawn tile JSON
-        return drawWaysJson;
+        return drawWays;
     }
 }

@@ -1,5 +1,7 @@
 package location;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class LatLon {
     private static final int EARTH_RADIUS_KM = 6371; // Radius of the earth in km
     private double lat;
@@ -18,18 +20,22 @@ public class LatLon {
         this.lon = oldLatLon.getLon();
     }
 
+    @JsonProperty
     public double getLat() {
         return lat;
     }
 
+    @JsonProperty
     public void setLat(double lat) {
         this.lat = lat;
     }
 
+    @JsonProperty
     public double getLon() {
         return lon;
     }
 
+    @JsonProperty
     public void setLon(double lon) {
         this.lon = lon;
     }

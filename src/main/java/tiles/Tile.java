@@ -1,14 +1,11 @@
 package tiles;
 
-import com.google.common.collect.Maps;
 import location.BoundingBox;
 import location.LatLon;
 
-import java.util.Map;
-
 public class Tile {
     public static final int MAX_ZOOM = 3;
-    public static final double BASE_SIZE = 0.0125;
+    public static final double BASE_TILE_SIZE = 0.0125;
     private int zoom;
     private BoundingBox box;
     private long id;
@@ -45,7 +42,7 @@ public class Tile {
     }
 
     public static double getTileSize(int zoom) {
-        return Math.pow(2, zoom) * BASE_SIZE;
+        return Math.pow(2, zoom) * BASE_TILE_SIZE;
     }
 
     private double roundDown(double val, double size) {

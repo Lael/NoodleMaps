@@ -1,6 +1,19 @@
 body {
   margin: 0;
-  font-family: garamond;
+  font-family: Garamond, serif;
+}
+
+.map {
+  width: 80vw;
+  height: 70vh;
+  margin: 40px 10vw;
+  background-color: #782626;
+}
+
+#map-canvas {
+  width: calc(80vw - 20px);
+  height: calc(70vh - 20px);
+  margin: 10px;
 }
 
 .project, .employment {
