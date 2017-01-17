@@ -35,19 +35,19 @@ public class BoundingBox {
     }
 
     public double getN() {
-        return ne.getLon();
-    }
-
-    public double getE() {
         return ne.getLat();
     }
 
+    public double getE() {
+        return ne.getLon();
+    }
+
     public double getW() {
-        return sw.getLat();
+        return sw.getLon();
     }
 
     public double getS() {
-        return sw.getLon();
+        return sw.getLat();
     }
 
     @Override

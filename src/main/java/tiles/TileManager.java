@@ -3,24 +3,19 @@ package tiles;
 import autocorrect.Trie;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import data.Downloader;
-import data.DrawWay;
 import data.FileEater;
 import data.MapsDB;
 import location.BoundingBox;
-import location.LatLon;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Set;
+
+import static noodleMaps.NoodleMapsApplication.MAPS_DIR_NAME;
+import static noodleMaps.NoodleMapsApplication.TILES_DIR_NAME;
+import static noodleMaps.NoodleMapsApplication.XML_DIR_NAME;
 
 /**
  * This class allows one to keep a roster of which tiles have been fetched already: we keep hold of which data has been
@@ -39,10 +34,30 @@ public class TileManager {
         this.fileEater = new FileEater(connection, trie);
         this.trie = trie;
         this.mapsDB = new MapsDB(connection);
-        // check tile and xml directories
-        // for each file in the directory
-        // parse the id from the filename
 
+        File tileDir = new File(MAPS_DIR_NAME + "/" + TILES_DIR_NAME);
+        File xmlDir = new File(MAPS_DIR_NAME + "/" + XML_DIR_NAME);
+
+        File[] tileFiles = tileDir.listFiles();
+        File[] dataFiles = xmlDir.listFiles();
+
+        if (dataFiles != null) {
+            for (File f : dataFiles) {
+                String name = f.getName();
+                if (f.isFile() && name.startsWith("x") && name.endsWith(".xml")) {
+                    downloadedIds.add(name.substring(1, name.length() - 4));
+                }
+            }
+        }
+
+        if (tileFiles != null) {
+            for (File f : tileFiles) {
+                String name = f.getName();
+                if (f.isFile() && name.startsWith("t") && name.endsWith(".json")) {
+                    drawnIds.add(name.substring(1, name.length() - 5));
+                }
+            }
+        }
     }
 
     private boolean isDownloaded(String id) {
@@ -61,56 +76,58 @@ public class TileManager {
         drawnIds.add(id);
     }
 
-    private void inscribe(String id, String data) throws Exception {
-        String fileName = "maps_data/tiles/t" + id + ".json";
-        PrintWriter out = new PrintWriter(fileName);
-        out.println(data);
+    private void inscribe(String id, TileData data) throws Exception {
+        FileOutputStream out = new FileOutputStream("maps_data/tiles/t" + id + ".json");
+        ObjectOutputStream oos = new ObjectOutputStream(out);
+        oos.writeObject(data);
     }
 
     public TileData fetchTileData(Tile tile) {
         String id = tile.getId();
+        System.out.println(id);
         if (!isDownloaded(id)) {
-            // download it
+            System.out.println("Downloading id=" + id);
             BoundingBox bigBox = tile.getBox();
             try {
                 File dl = Downloader.downloadBox(bigBox, id);
-                fileEater.consumeXml(new FileInputStream(dl));
-                addDownloaded(id);
+                if (dl != null) {
+                    fileEater.consumeXml(new FileInputStream(dl));
+                    addDownloaded(id);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
             }
         }
 
-        GsonBuilder gb = new GsonBuilder();
-        Gson gson = gb.create();
         TileData result;
 
         if (!isDrawn(id)) {
+            System.out.println("Drawing id=" + id);
             // draw it
             System.out.println("Drawing a tile!");
             result = new TileData(id, mapsDB.fillTile(tile));
 
-            String drawWaysJson = gson.toJson(result);
-            // add it
             try {
-                inscribe(id, drawWaysJson);
+                inscribe(id, result);
                 addDrawn(id);
             } catch (Exception e) {
-                System.out.println("Possibly failed to write tile JSON!");
+                System.out.println("Possibly failed to write tile JSON: ");
+                e.printStackTrace();
                 return new TileData(id, Lists.newArrayList());
             }
         } else {
             try {
-                result = gson.fromJson(new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id + ".json"))), TileData.class);
+                FileInputStream streamIn = new FileInputStream("maps_data/tiles/t" + id + ".json");
+                ObjectInputStream objectinputstream = new ObjectInputStream(streamIn);
+                result = (TileData) objectinputstream.readObject();
             } catch (Exception e) {
-                System.out.println("Could not read!");
+                System.out.println("Could not read: ");
+                e.printStackTrace();
                 return new TileData(id, Lists.newArrayList());
             }
         }
 
-
-        // return drawn tile JSON
         return result;
     }
 }

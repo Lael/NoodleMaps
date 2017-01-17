@@ -2,7 +2,9 @@ package location;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LatLon {
+import java.io.Serializable;
+
+public class LatLon implements Serializable {
     private static final int EARTH_RADIUS_KM = 6371; // Radius of the earth in km
     private double lat;
     private double lon;

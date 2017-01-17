@@ -36,8 +36,14 @@ public class FileEater {
         }
     }
 
-    private void insertObject(String sql) throws SQLException {
-        statement.executeUpdate(sql);
+    private boolean insertObject(String sql) throws SQLException {
+        try {
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            // I know.
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -48,6 +54,8 @@ public class FileEater {
      * @throws IOException
      */
     public void consumeXml(InputStream stream) throws XMLStreamException, IOException, XMLParseException, SQLException {
+        int repeats = 0;
+
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         XMLStreamReader reader = inputFactory.createXMLStreamReader(stream);
 
@@ -56,7 +64,10 @@ public class FileEater {
             if (eventType == START_ELEMENT) {
                 String tagName = reader.getLocalName();
                 if (tagName.equals("node")) {
-                    getNode(reader);
+                    if (!getNode(reader)) {
+                        repeats ++;
+                    }
+
                 } else if (tagName.equals("way")) {
                     getWay(reader);
                 }
@@ -66,9 +77,10 @@ public class FileEater {
 
         reader.close();
         stream.close();
+        System.out.println("repeats = " + repeats);
     }
 
-    private void getNode(XMLStreamReader reader) throws SQLException {
+    private boolean getNode(XMLStreamReader reader) throws SQLException {
         Node node = new Node();
         int numAtts = reader.getAttributeCount();
         for (int i = 0; i < numAtts; i++) {
@@ -82,7 +94,7 @@ public class FileEater {
                 node.setLon(Double.parseDouble(attValue));
             }
         }
-        insertObject(node.getInsertMessage());
+        return insertObject(node.getInsertMessage());
     }
 
     private void getWay(XMLStreamReader reader) throws XMLStreamException, XMLParseException, SQLException {

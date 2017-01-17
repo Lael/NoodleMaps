@@ -37,7 +37,6 @@ public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> 
     }
 
     public void run(NoodleMapsConfiguration noodleMapsConfiguration, Environment environment) throws Exception {
-        cleanDirectory();
         System.out.println("Welcome to NoodleMaps!");
         System.out.println("Verifying directory...");
         final Connection connection = verifyDirectoryAndDatabase();
@@ -124,7 +123,11 @@ public class NoodleMapsApplication extends Application<NoodleMapsConfiguration> 
         String sql = "create index if not exists " +
                 indexName + " on " +
                 tableName + "(" + column + ");";
-
+        try {
+            statement.execute(sql);
+        } catch (Exception e) {
+            System.out.println("Failed to execute: " + e.getMessage());
+        }
     }
 
     private Connection verifyDatabase(File database) {

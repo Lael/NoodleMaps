@@ -50,6 +50,8 @@ public class Node {
                 "(" + id + ", " +
                 latLon.getLat() + ", " +
                 latLon.getLon() + ");";
+        System.out.print("sql = " + sql);
+        System.out.println(this.toString());
         return sql;
     }
 

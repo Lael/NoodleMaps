@@ -52,7 +52,9 @@ public class MapsDB {
         List<DrawWay> drawWayList = Lists.newArrayList();
         try {
             /* make a map of nodes in the region */
+
             BoundingBox box = tile.getBox();
+            System.out.println("box.toString() = " + box.toString());
             nodeStatement.setDouble(1, box.getS());
             nodeStatement.setDouble(2, box.getN());
             nodeStatement.setDouble(3, box.getW());
@@ -148,6 +150,7 @@ public class MapsDB {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("drawWayList.size() = " + drawWayList.size());
         return drawWayList;
     }
 

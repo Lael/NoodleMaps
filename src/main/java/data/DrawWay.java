@@ -3,7 +3,9 @@ package data;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import location.LatLon;
 
-public class DrawWay {
+import java.io.Serializable;
+
+public class DrawWay implements Serializable {
     private boolean oneWay = false;
     private String building = "";
     private String highway = "";

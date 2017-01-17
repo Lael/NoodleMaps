@@ -3,9 +3,10 @@ package tiles;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import data.DrawWay;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class TileData {
+public class TileData implements Serializable {
     private String id;
     private List<DrawWay> ways;
 

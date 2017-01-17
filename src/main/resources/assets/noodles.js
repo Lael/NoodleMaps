@@ -6,7 +6,7 @@ TILES_PER_DEGREE = 10;
 
 INITIAL_LATLON = {
     lat: 47.7, // north
-    lon: 12.8  // east
+    lon: 18.5  // east
 };
 
 var map_div = null;
@@ -39,8 +39,8 @@ function tileId(latlon) {
 var converter = {
     zoom: 20000.0, // pixels per degree
     nwLatLon: {
-        lat: INITIAL_LATLON.lat + 0.1,
-        lon: INITIAL_LATLON.lon - 0.1
+        lat: INITIAL_LATLON.lat + 0.05,
+        lon: INITIAL_LATLON.lon - 0.05
     },
     needTiles: function() {
         var box = {
@@ -49,8 +49,8 @@ var converter = {
             west: Math.floor(10 * this.nwLatLon.lon),
             east: Math.ceil(10 * (this.nwLatLon.lon + canvas.height / this.zoom))
         };
-        for (var i = box.south; i <= box.north; i ++) {
-            for (var j = box.west; j <= box.east; j ++ ) {
+        for (var i = box.south; i < box.north; i ++) {
+            for (var j = box.west; j < box.east; j ++ ) {
                 var latlon = {
                     lat: i / 10.0,
                     lon: j / 10.0
@@ -163,6 +163,7 @@ function startup() {
 
     ctx = canvas.getContext('2d');
 
+    draw();
     converter.needTiles();
     draw();
 }
@@ -192,10 +193,14 @@ function draw() {
     ctx.fillStyle = '#2222aa';
     shapes.tiles.forEach(function (tile) {
         tile.forEach(function (drawWay) {
-            var p1pix = converter.toPixels(drawWay.p1);
-            var p2pix = converter.toPixels(drawWay.p2);
-            ctx.moveTo(p1pix.x, p1pix.y);
-            ctx.lineTo(p2pix.x, p2pix.y);
+            if (drawWay.p1 && drawWay.p2) {
+                var p1pix = converter.toPixels(drawWay.p1);
+                var p2pix = converter.toPixels(drawWay.p2);
+                ctx.moveTo(p1pix.x, p1pix.y);
+                ctx.lineTo(p2pix.x, p2pix.y);
+            } else {
+                console.log(drawWay);
+            }
         });
     });
     ctx.stroke();
