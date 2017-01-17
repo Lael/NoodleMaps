@@ -4,6 +4,7 @@ import autocorrect.Trie;
 import data.DrawWay;
 import location.LatLon;
 import tiles.Tile;
+import tiles.TileData;
 import tiles.TileManager;
 
 import javax.validation.constraints.NotNull;
@@ -30,12 +31,12 @@ public class NoodleService {
         this.tileManager = new TileManager(connection, trie);
     }
 
-    public List<String> autocorrect(String word) {
+    List<String> autocorrect(String word) {
         return trie.autocorrect(word, maxLed, numSuggestions);
     }
 
-    public List<DrawWay> fetchTile(int zoom, LatLon latLon) {
-        System.out.println("Tile request: (" + latLon + ", " + zoom + ").");
-        return tileManager.fetchTileData(new Tile(zoom, latLon));
+    TileData fetchTile(LatLon latLon) {
+        System.out.println("Tile request: (" + latLon + ").");
+        return tileManager.fetchTileData(new Tile(latLon));
     }
 }

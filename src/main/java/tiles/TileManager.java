@@ -28,8 +28,8 @@ import java.util.Set;
  */
 public class TileManager {
 
-    private Set<Long> downloadedIds = Sets.newHashSet();
-    private Set<Long> drawnIds = Sets.newHashSet();
+    private Set<String> downloadedIds = Sets.newHashSet();
+    private Set<String> drawnIds = Sets.newHashSet();
 
     private FileEater fileEater;
     private Trie trie;
@@ -42,85 +42,75 @@ public class TileManager {
         // check tile and xml directories
         // for each file in the directory
         // parse the id from the filename
+
     }
 
-    private boolean isDownloaded(long id) {
+    private boolean isDownloaded(String id) {
         return downloadedIds.contains(id);
     }
 
-    private boolean isDrawn(long id) {
+    private boolean isDrawn(String id) {
         return drawnIds.contains(id);
     }
 
-    private void addDownloaded(long id) {
+    private void addDownloaded(String id) {
         downloadedIds.add(id);
     }
 
-    private void addDrawn(long id) {
+    private void addDrawn(String id) {
         drawnIds.add(id);
     }
 
-    private void inscribe(Long id, String data) throws Exception {
-        String fileName = "maps_data/tiles/t" + id.toString() + ".json";
+    private void inscribe(String id, String data) throws Exception {
+        String fileName = "maps_data/tiles/t" + id + ".json";
         PrintWriter out = new PrintWriter(fileName);
         out.println(data);
     }
 
-    public List<DrawWay> fetchTileData(Tile tile) {
-        Long id = tile.getId();
+    public TileData fetchTileData(Tile tile) {
+        String id = tile.getId();
         if (!isDownloaded(id)) {
             // download it
-            BoundingBox bigBox = tile.getBigBox();
+            BoundingBox bigBox = tile.getBox();
             try {
                 File dl = Downloader.downloadBox(bigBox, id);
                 fileEater.consumeXml(new FileInputStream(dl));
+                addDownloaded(id);
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
-            }
-            // add all smaller tiles
-            for (int z = 0; z < Tile.MAX_ZOOM; z++) {
-                int gridSize = (int) Math.pow(2, Tile.MAX_ZOOM - z);
-                for (int x = 0; x < gridSize; x++) {
-                    for (int y = 0; y < gridSize; y++) {
-                        double lat = bigBox.getW() + x * Tile.getTileSize(z);
-                        double lon = bigBox.getS() + x * Tile.getTileSize(z);
-                        Tile t = new Tile(z, new LatLon(lat, lon));
-                        addDownloaded(t.getId());
-                    }
-                }
             }
         }
 
         GsonBuilder gb = new GsonBuilder();
         Gson gson = gb.create();
-        List drawWays;
+        TileData result;
 
         if (!isDrawn(id)) {
             // draw it
             System.out.println("Drawing a tile!");
-            drawWays = mapsDB.fillTile(tile);
+            result = new TileData(id, mapsDB.fillTile(tile));
 
-            String drawWaysJson = gson.toJson(drawWays);
+            String drawWaysJson = gson.toJson(result);
             // add it
             try {
                 inscribe(id, drawWaysJson);
                 addDrawn(id);
             } catch (Exception e) {
                 System.out.println("Possibly failed to write tile JSON!");
-                return Lists.newArrayList();
+                return new TileData(id, Lists.newArrayList());
             }
         } else {
             try {
-                drawWays = gson.fromJson(new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id.toString() + ".json"))), List.class);
+                result = gson.fromJson(new String(Files.readAllBytes(Paths.get("maps_data/tiles/t" + id + ".json"))), TileData.class);
             } catch (Exception e) {
                 System.out.println("Could not read!");
-                return Lists.newArrayList();
+                return new TileData(id, Lists.newArrayList());
             }
         }
 
 
         // return drawn tile JSON
-        return drawWays;
+        return result;
     }
 }

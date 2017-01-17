@@ -3,6 +3,7 @@ package server;
 import com.codahale.metrics.annotation.Timed;
 import data.DrawWay;
 import location.LatLon;
+import tiles.TileData;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -28,13 +29,12 @@ public class NoodleResource {
     }
 
     @GET
-    @Path("/tile/{lat}/{lon}/{zoom}")
+    @Path("/tile/{lat}/{lon}")
     @Produces(MediaType.APPLICATION_JSON)
     @Timed
-    public List<DrawWay> getTile(@PathParam("lat") double lat,
-                                 @PathParam("lon") double lon,
-                                 @PathParam("zoom") int zoom) {
-        List response = noodleService.fetchTile(zoom, new LatLon(lat, lon));
+    public TileData getTile(@PathParam("lat") double lat,
+                            @PathParam("lon") double lon) {
+        TileData response = noodleService.fetchTile(new LatLon(lat, lon));
         System.out.println("Done!");
         return response;
     }
