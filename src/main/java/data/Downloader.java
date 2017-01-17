@@ -19,9 +19,9 @@ public class Downloader {
      * Downloads a bounding box worth of data from OSM
      * @param box a bounding box to download
      * @return a File object containing the downloaded file
-     * @throws IOException
+     * @throws IOException on download failure
      */
-    public static File downloadBox(BoundingBox box, long id) throws IOException {
+    public static File downloadBox(BoundingBox box, String id) throws IOException {
         String latLonString = boxToString(box);
         System.out.println(latLonString);
 
@@ -35,6 +35,7 @@ public class Downloader {
         if (!fileExists) {
             System.out.println("Attempting to download map data for bounding box " + box.toString() + "...");
             URL url = new URL(URL_BASE + latLonString);
+            System.out.println("url.toString() = " + url.toString());
             ReadableByteChannel rbc = Channels.newChannel(url.openStream());
             FileOutputStream stream = new FileOutputStream(mapFile);
 
